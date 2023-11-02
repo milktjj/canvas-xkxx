@@ -41,6 +41,26 @@ order by c.course_id
 
 """
 
+sql3 = """
+select   
+c.course_schoolyear, c.course_term,c.course_id ,c.instructional_class_id, convert(varchar(100), c.course_name) as course_name , dg.kch as course_code, c.course_hours,c.course_type,dg.kcxz as course_type_2, 
+dg.KKBMMC as org,dg.XF as course_xf, 
+
+dg.KCFZRJGH as kcfzegh ,dg.KCFZRXM  as kcfzr  ,
+c.jw_gh  as teacher_id,convert(varchar(100),u.user_name) as teacher,
+convert(varchar(8000), DG.ZWKCJJ) as chinese,
+convert(varchar(8000), DG.YWKCJJ) as english,
+dg.kcmb as course_target, dg.khfs as course_exam
+from t_course c
+left join t_user u on u.user_id =c.jw_gh 
+
+left join t_org org on org.org_id =c.org_id 
+left join CourseInfo.dbo.t_kcdg dg on dg.kch=c.course_kcdm  and dg.KCMC =c.course_name and dg.KKBMMC =org.org_name 
+
+where c.oper_status <> 3 and c.SJLY =60200 and dg.KKBMMC <> '密西根学院'
+order by c.course_id 
+"""
+
 charset = 'GB18030'
 
 
@@ -53,7 +73,7 @@ def get_course_infos():
                            password='N5knPJvN', database='CourseInfo', port='10086', charset=charset)
     # cursor = conn.cursor(as_dict=True)
     cursor = conn.cursor()
-    cursor.execute(sql2)
+    cursor.execute(sql3)
     rows = cursor.fetchall()
     column_names = [column[0] for column in cursor.description]
     row_set = set(rows)
@@ -77,8 +97,8 @@ def refresh_course_df():
     print(len(df))
     df = df.drop_duplicates()
     print(len(df))
-    df = df.sort_values(['chinese', 'english'], ascending=False).drop_duplicates(
-        subset=df.columns.difference(['chinese', 'english'])).sort_index()
+    df = df.sort_values(['chinese', 'english', 'course_target', 'course_exam'], ascending=False).drop_duplicates(
+        subset=df.columns.difference(['chinese', 'english', 'course_target', 'course_exam'])).sort_index()
     global course_df
     with lock:
         course_df = df
@@ -105,10 +125,11 @@ if __name__ == "__main__":
     import pandas as pd
     df = pd.DataFrame(course_info_list)
     print(len(df))
-    df = df.drop_duplicates()
+    df = df.drop_duplicates(inplace=True)
     print(len(df))
-    df = df.sort_values(['chinese', 'english'], ascending=False).drop_duplicates(
-        subset=df.columns.difference(['chinese', 'english'])).sort_index()
+    df = df.sort_values(['chinese', 'english', 'course_target', 'course_exam'],
+                        ascending=False).drop_duplicates(subset=df.columns.difference(
+                            ['chinese', 'english', 'course_target', 'course_exam'])).sort_index()
 
     print(len(df))
     print(df.iloc[0].to_dict())

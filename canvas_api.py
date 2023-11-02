@@ -14,6 +14,7 @@ def get_course_section(course_id):
     response = requests.request("GET", url, headers=headers)
     ret_json = response.json()
     if isinstance(ret_json, list):
+        print(ret_json)
         return ret_json
     elif isinstance(ret_json, dict):
         return []

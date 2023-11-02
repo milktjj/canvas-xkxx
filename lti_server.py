@@ -9,8 +9,11 @@ import os
 import share_sql
 from flask import (Flask, request, redirect, send_from_directory)
 
-base_url = '127.0.0.1:3000'
-web_url = '127.0.0.1:8080'
+port = 18080
+# base_url = '10.119.10.48:13000'
+base_url = 'lms.sjtu.edu.cn/xk-web'
+# web_url = f'10.119.10.48:{port}'
+web_url = 'lms.sjtu.edu.cn/xk'
 canvas_domain = 'etctest'
 client_id = 10000000000026
 
@@ -65,19 +68,19 @@ CORS(app,  supports_credentials=True)
 #     return "Hello World!"
 
 
-@app.route('/')
-def index():
-    file_list = os.listdir('.')
-    html = '<ul>'
-    for filename in file_list:
-        html += f'<li><a href="{filename}">{filename}</a></li>'
-    html += '</ul>'
-    return html
-
-
-@app.route('/<path:path>')
-def serve_file(path):
-    return send_from_directory('.', path)
+# @app.route('/')
+# def index():
+#     file_list = os.listdir('.')
+#     html = '<ul>'
+#     for filename in file_list:
+#         html += f'<li><a href="{filename}">{filename}</a></li>'
+#     html += '</ul>'
+#     return html
+#
+#
+# @app.route('/<path:path>')
+# def serve_file(path):
+#     return send_from_directory('.', path)
 
 
 @app.route('/jwk')
@@ -148,4 +151,4 @@ def decode_jwt(token, public_key):
 if __name__ == '__main__':
     share_sql.refresh_course_df()
     context = ('cert.pem', 'key.pem')  # 证书和密钥文件路径
-    app.run(port=8080, debug=True, ssl_context=context)
+    app.run(host='0.0.0.0', port=port, debug=True)
