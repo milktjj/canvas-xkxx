@@ -1,4 +1,6 @@
 # from share_sql import course_df
+import db
+from collections import OrderedDict
 import share_sql
 import canvas_api as api
 from flask_cors import CORS
@@ -7,7 +9,11 @@ import json
 from jwcrypto import jwk
 import os
 import share_sql
-from flask import (Flask, request, redirect, send_from_directory)
+from flask import (Flask, jsonify, request, redirect, send_from_directory)
+import s3
+import audio
+from datetime import datetime
+import time
 
 port = 18080
 # base_url = '10.119.10.48:13000'
@@ -16,6 +22,7 @@ base_url = 'lms.sjtu.edu.cn/xk-web'
 web_url = 'lms.sjtu.edu.cn/xk'
 canvas_domain = 'etctest'
 client_id = 10000000000026
+refresh_time = int(time.time())
 
 key_pair = {
     "p": "54xA0vFaPsrzAwPzk8QIY8xHEgC_WBHfK02PR1F7msjBpf0db_gboBXgs3m_PtF4ykAZR-BMCfnQQbz6hMr1VyG-kxB1GqpZADD0WeumRb2P7-6Rm_Q6o6XgulfZehS4CTJ_u8eZahwlWwHbMQRmHGpHL96qb0dq2SX2wj9OrV0",
@@ -106,16 +113,85 @@ def hello():
     return redirect(f"https://{base_url}/courses?token={id_token}", code=302)
 
 
+@app.route('/lti1_1', methods=['POST'])
+def lti1_1():
+    sis_id = request.form.get('custom_course_sis_id')
+    return redirect(f"https://{base_url}/courses?course_sis_id={sis_id}", code=302)
+
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    # 检查是否有文件被上传
+    if 'music' not in request.files:
+        return 'No file uploaded.', 400
+
+    file = request.files['music']
+    # 检查文件名是否为空
+    if file.filename == '':
+        return 'Empty filename.', 400
+    status = 200
+    try:
+        current_timestamp = int(datetime.timestamp(datetime.now()))
+        file_name = f'{current_timestamp}.amr'
+        mp3_file_name = f'{current_timestamp}.mp3'
+        file.save(file_name)
+        audio.amr_to_mp3(file_name, mp3_file_name)
+        s3.upload_obj_to_s3(mp3_file_name, s3.prefix+mp3_file_name)
+        db.insert_data(current_timestamp, False)
+    except:
+        status = 400
+    finally:
+        if os.path.exists(file_name):
+            os.remove(file_name)
+        if os.path.exists(mp3_file_name):
+            os.remove(mp3_file_name)
+        print("delete")
+    return {}
+
+
+@app.route('/getsharelink', methods=['GET'])
+def get_share_link():
+    timestamp = request.args.get('t')
+    if not timestamp:
+        return {}
+    file_name = f'{timestamp}.mp3'
+    url = s3.get_s3_file_url(s3.prefix+file_name)
+    return {"url": url}
+
+
+@app.route('/list', methods=['GET'])
+def get_tear_list():
+    date = request.args.get('date')
+    if not date:
+        date = datetime.now().strftime('%Y-%m-%d')
+    keys = ['t', 'l']
+    values = db.query_data_by_date(date)
+    if not values:
+        values = []
+    results = [dict(zip(keys, value)) for value in values]
+    return jsonify(results)
+
+
+@app.route('/refreshTime', methods=['GET'])
+def get_refresh_time():
+    return {"t": refresh_time}
+
+
 @app.route('/courses/<course_id>/info', methods=['GET'])
 def get_course_info(course_id):
-    course_section_list = api.get_course_section(course_id)
-    if len(course_section_list) == 0:
-        return handle_error()
-    ret_course_id = course_section_list[0].get('course_id')
-    if str(ret_course_id) != course_id:
-        return handle_error()
-    data = share_sql.get_course_info_by_sis(
-        course_section_list[0].get('sis_course_id'))
+    # course_section_list = api.get_course_section(course_id)
+    # if len(course_section_list) == 0:
+    #     return handle_error()
+    # ret_course_id = course_section_list[0].get('course_id')
+    # if str(ret_course_id) != course_id:
+    #     return handle_error()
+    # data = share_sql.get_course_info_by_sis(
+    #     course_section_list[0].get('sis_course_id'))
+    current_timestamp = int(time.time())
+    if refresh_time + 6*60*60 < current_timestamp:
+        share_sql.refresh_course_df()
+    data = share_sql.get_course_info_by_sis(course_id)
+
     response = app.response_class(
         response=data,
         status=200,
@@ -150,5 +226,5 @@ def decode_jwt(token, public_key):
 
 if __name__ == '__main__':
     share_sql.refresh_course_df()
-    context = ('cert.pem', 'key.pem')  # 证书和密钥文件路径
+    # context = ('cert.pem', 'key.pem')  # 证书和密钥文件路径
     app.run(host='0.0.0.0', port=port, debug=True)
