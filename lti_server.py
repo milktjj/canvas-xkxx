@@ -166,6 +166,19 @@ def update_config():
     return config.update_config_info(key, value)
 
 
+@app.route('/uploadB', methods=['POST'])
+def uploadBin():
+    data = request.get_data()  # 获取请求的原始数据
+    print(data)
+    first_two_bytes = data[:2]  # 截取前两个字节
+    data = data[2:]
+    number = int.from_bytes(first_two_bytes, 'big')  # 将字节转换为数字
+
+    print(number)  # 输出截取并转换后的数字
+    print(data)
+    return {}
+
+
 @app.route('/getsharelink', methods=['GET'])
 def get_share_link():
     timestamp = request.args.get('t')
