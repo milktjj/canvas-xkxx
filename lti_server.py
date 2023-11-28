@@ -1,5 +1,6 @@
 # from share_sql import course_df
 import db
+import config
 from collections import OrderedDict
 import share_sql
 import canvas_api as api
@@ -147,6 +148,22 @@ def upload():
             os.remove(mp3_file_name)
         print("delete")
     return {}
+
+
+@app.route('/config', methods=['GET'])
+def get_config():
+    return config.get_config_info()
+
+
+@app.route('/config', methods=['POST'])
+def update_config():
+    data = request.get_json()
+    key = data.get('key')
+    value = data.get('value')
+    print(key, value)
+    if key is None or value is None:
+        return {}
+    return config.update_config_info(key, value)
 
 
 @app.route('/getsharelink', methods=['GET'])

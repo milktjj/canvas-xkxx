@@ -158,21 +158,25 @@ def get_course_info_by_sis(sis_id):
 
 
 if __name__ == "__main__":
-    course_info_list = get_course_infos()
-    import pandas as pd
-    df = pd.DataFrame(course_info_list)
-    print(len(df))
-    df = df.drop_duplicates(inplace=True)
-    print(len(df))
-    df = df.sort_values(['chinese', 'english', 'course_target', 'course_exam'],
-                        ascending=False).drop_duplicates(subset=df.columns.difference(
-                            ['chinese', 'english', 'course_target', 'course_exam'])).sort_index()
-
-    print(len(df))
-    print(df.iloc[0].to_dict())
+    # course_info_list = get_course_infos()
+    # print(len(course_info_list))
+    # import pandas as pd
+    # df = pd.DataFrame(course_info_list)
+    # print(len(df))
+    # df = df.drop_duplicates(inplace=True)
+    # print(len(df))
+    # df = df.sort_values(['chinese', 'english', 'course_target', 'course_exam'],
+    #                     ascending=False).drop_duplicates(subset=df.columns.difference(
+    #                         ['chinese', 'english', 'course_target', 'course_exam'])).sort_index()
+    #
+    # print(len(df))
+    # print(df.iloc[0].to_dict())
     # pd.set_option('display.max_columns', None)
     # pd.set_option('display.max_rows', None)
     # grouped = df.groupby('course_id')
     # for course_id, group in grouped:
     #     print("Course ID:", course_id)
     #     print(group)
+    refresh_course_df()
+    print(len(course_df))
+    print(course_df)
