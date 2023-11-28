@@ -1,5 +1,6 @@
 config_info = {
     "record": False,
+    "sleep": 600,
 }
 
 
