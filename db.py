@@ -11,7 +11,7 @@ db_params = {
 }
 
 
-def insert_data(timestamp, is_listen):
+async def insert_data(timestamp, is_listen):
     # 连接到PostgreSQL数据库
     conn = psycopg2.connect(**db_params)
 

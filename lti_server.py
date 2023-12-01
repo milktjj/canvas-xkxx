@@ -15,6 +15,11 @@ import s3
 import audio
 from datetime import datetime
 import time
+import os
+import random
+import heapq
+import string
+from concurrent.futures import ThreadPoolExecutor
 
 port = 18080
 # base_url = '10.119.10.48:13000'
@@ -24,6 +29,8 @@ web_url = 'lms.sjtu.edu.cn/xk'
 canvas_domain = 'etctest'
 client_id = 10000000000026
 refresh_time = int(time.time())
+file_heap = []
+
 
 key_pair = {
     "p": "54xA0vFaPsrzAwPzk8QIY8xHEgC_WBHfK02PR1F7msjBpf0db_gboBXgs3m_PtF4ykAZR-BMCfnQQbz6hMr1VyG-kxB1GqpZADD0WeumRb2P7-6Rm_Q6o6XgulfZehS4CTJ_u8eZahwlWwHbMQRmHGpHL96qb0dq2SX2wj9OrV0",
@@ -70,6 +77,7 @@ public_key = {
 
 app = Flask(__name__)
 CORS(app,  supports_credentials=True)
+executor = ThreadPoolExecutor()
 
 # @app.route('/', methods=['GET', 'POST'])
 # def hello():
@@ -168,15 +176,62 @@ def update_config():
 
 @app.route('/uploadB', methods=['POST'])
 def uploadBin():
-    data = request.get_data()  # 获取请求的原始数据
-    print(data)
-    first_two_bytes = data[:2]  # 截取前两个字节
-    data = data[2:]
-    number = int.from_bytes(first_two_bytes, 'big')  # 将字节转换为数字
+    if 'pcm' not in request.files:
+        return {"status": 200}
 
-    print(number)  # 输出截取并转换后的数字
-    print(data)
-    return {}
+    file = request.files['pcm']
+    if file.filename == '':
+        return {"status": 200}
+    ifilename = './'+generate_random_string(32) + '.pcm'
+    heapq.heappush(file_heap, (int(time.time() * 1000), ifilename))
+    file.save(ifilename)
+    heap_size_triger = config.get_config_info()['fileLen']
+    if len(file_heap) >= heap_size_triger:
+        file_list = []
+        for _ in range(heap_size_triger):
+            if file_heap:
+                timestamp, filename = heapq.heappop(file_heap)
+                print(filename)
+                file_list.append(filename)
+            else:
+                break
+        sorted_files = sorted(file_list)
+
+        merged_file_path = "./temp.pcm"
+        merged_file = open(merged_file_path, "wb")
+
+        for file_path in sorted_files:
+            with open(file_path, "rb") as file:
+                data = file.read()
+                merged_file.write(data)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+        merged_file.close()
+        try:
+            # current_timestamp = int(datetime.timestamp(datetime.now()))
+            # mp3_file_name = f'{current_timestamp}.mp3'
+            # audio.pcm_to_mp3(merged_file_path, mp3_file_name)
+            # s3.upload_obj_to_s3(mp3_file_name, s3.prefix+mp3_file_name)
+            # db.insert_data(current_timestamp, False)
+            # asyncio.create_task(audio.pcm_to_s3(merged_file_path))
+            executor.submit(audio.pcm_to_s3, merged_file_path)
+        # finally:
+        #     if os.path.exists(merged_file_path):
+        #         os.remove(merged_file)
+        #     if os.path.exists(mp3_file_name):
+        #         os.remove(mp3_file_name)
+        #     print("delete")
+        except:
+            print('failed')
+    return {"status": 200, "t": 1}
+
+
+def generate_random_string(length):
+    # 从大小写字母和数字中生成随机字符
+    characters = string.ascii_letters + string.digits
+    # 使用random.choice()函数从字符集中随机选择字符，并将它们组合在一起
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
 
 
 @app.route('/getsharelink', methods=['GET'])
