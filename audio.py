@@ -2,7 +2,7 @@ from pydub import AudioSegment
 import os
 import wave
 import subprocess
-import datetime
+from datetime import datetime
 import db
 import s3
 import asyncio
@@ -30,14 +30,19 @@ def pcm_to_mp3(pcm_file, output_file):
 
 
 def pcm_to_s3(pcm_file):
-    current_timestamp = int(datetime.timestamp(datetime.now()))
-    mp3_file_name = f'{current_timestamp}.mp3'
-    print("start pcm_to_mp3")
-    pcm_to_mp3(pcm_file, mp3_file_name)
-    print("start upload 2 s3")
-    s3.upload_obj_to_s3(mp3_file_name, s3.prefix+mp3_file_name)
-    print("start write db")
-    db.insert_data(current_timestamp, False)
+    try:
+        current_timestamp = int(datetime.timestamp(datetime.now()))
+        mp3_file_name = f'{current_timestamp}.mp3'
+        pcm_to_mp3(pcm_file, mp3_file_name)
+        s3.upload_obj_to_s3(mp3_file_name, s3.prefix+mp3_file_name)
+        db.insert_data(current_timestamp, False)
+    except Exception as e:
+        print(e)
+    finally:
+        if os.path.exists(pcm_file):
+            os.remove(pcm_file)
+        if os.path.exists(mp3_file_name):
+            os.remove(mp3_file_name)
 
 
 def pcm2wav(pcm_data, wav_file, channels=1, bits=16, sample_rate=16000):

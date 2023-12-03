@@ -58,7 +58,7 @@ def get_s3_file_url(object_name):
 # list_s3_objects(endpoint_url, bucket_name, access_key, secret_key, prefix)
 
 
-async def upload_obj_to_s3(file_path, object_name):
+def upload_obj_to_s3(file_path, object_name):
     try:
         s3 = boto3.client('s3', endpoint_url=endpoint_url,
                           aws_access_key_id=access_key,

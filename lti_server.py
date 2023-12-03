@@ -19,7 +19,9 @@ import os
 import random
 import heapq
 import string
+from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
+import ws
 
 port = 18080
 # base_url = '10.119.10.48:13000'
@@ -36,7 +38,7 @@ key_pair = {
     "p": "54xA0vFaPsrzAwPzk8QIY8xHEgC_WBHfK02PR1F7msjBpf0db_gboBXgs3m_PtF4ykAZR-BMCfnQQbz6hMr1VyG-kxB1GqpZADD0WeumRb2P7-6Rm_Q6o6XgulfZehS4CTJ_u8eZahwlWwHbMQRmHGpHL96qb0dq2SX2wj9OrV0",
     "kty": "RSA",
     "q": "kCA8g2LsEAvb1anzDaLr3LqOOty2fycPPhrCVUg2WoxZfJ1Mz0nM2H2U5yiYM6Fv9ggR8_hIpinFyQNrwWyHSMRB-UqSQW8viL5_VX10oP4mFVwSO0B2A0xHwufI_7oM50YrL5CJFXK7YcMbWjRNpxP6DXUVNH-q63GnYpIgnzU",
-    "d": "GniOrR6yafzpvmh7n4LH8ZJScT4RJ3GZwKT3ivMfTXtnL4hNyFkyakjpvbbvf30LywThIkHPcTVVX75slP8dgjz08Gwrgalhb-fAv1OTijOlr8zjzUek4tnZT0KzsKU94oZZy__exCKM5Izeyotgb8JQAQNGT0YpdWtGXISLNw-sUaMmdfYRxZoooVErfgUjduKyxLy-1ss8j-WoHDcvjjxOG5OBGD65WLiOMsm-XKFtcEAZZPpGqP7S-q-TI8uem4rx2uE6TKKTw2pYmC9h8m_ROxzi8O8phbsNRa3MP7qVWhaQC8to5Hc7RD9jBsa_NmyRBjcXRzxWNWWTNI1VQQ",
+    "d": "GniOrR6yafzpvmh7n4tH8ZJScT4RJ3GZwKT3ivMfTXtnL4hNyFkyakjpvbbvf30LywThIkHPcTVVX75slP8dgjz08Gwrgalhb-fAv1OTijOlr8zjzUek4tnZT0KzsKU94oZZy__exCKM5Izeyotgb8JQAQNGT0YpdWtGXISLNw-sUaMmdfYRxZoooVErfgUjduKyxLy-1ss8j-WoHDcvjjxOG5OBGD65WLiOMsm-XKFtcEAZZPpGqP7S-q-TI8uem4rx2uE6TKKTw2pYmC9h8m_ROxzi8O8phbsNRa3MP7qVWhaQC8to5Hc7RD9jBsa_NmyRBjcXRzxWNWWTNI1VQQ",
     "e": "AQAB",
     "use": "enc",
     "kid": "IPaVTf0jSkmaGhwCee5OTnufsWq1V2jZO2nJuQv3yys",
@@ -77,7 +79,8 @@ public_key = {
 
 app = Flask(__name__)
 CORS(app,  supports_credentials=True)
-executor = ThreadPoolExecutor()
+executor = ThreadPoolExecutor(max_workers=30)
+
 
 # @app.route('/', methods=['GET', 'POST'])
 # def hello():
@@ -98,6 +101,22 @@ executor = ThreadPoolExecutor()
 # def serve_file(path):
 #     return send_from_directory('.', path)
 
+# async def refresh(ws):
+#     while True:
+#         msg = await ws.recv()
+#         print(f"< {msg}")
+#         s = await reload()
+#         await ws.send(s)
+#
+#
+# async def reload():
+#     pass
+#
+#
+# async def socket():
+#     uri = "ws://localhost:18080"
+#     async with websockets.connect(uri) as ws:
+#         await refresh(ws)
 
 @app.route('/jwk')
 def jwk():
@@ -208,22 +227,10 @@ def uploadBin():
                     os.remove(file_path)
         merged_file.close()
         try:
-            # current_timestamp = int(datetime.timestamp(datetime.now()))
-            # mp3_file_name = f'{current_timestamp}.mp3'
-            # audio.pcm_to_mp3(merged_file_path, mp3_file_name)
-            # s3.upload_obj_to_s3(mp3_file_name, s3.prefix+mp3_file_name)
-            # db.insert_data(current_timestamp, False)
-            # asyncio.create_task(audio.pcm_to_s3(merged_file_path))
             executor.submit(audio.pcm_to_s3, merged_file_path)
-        # finally:
-        #     if os.path.exists(merged_file_path):
-        #         os.remove(merged_file)
-        #     if os.path.exists(mp3_file_name):
-        #         os.remove(mp3_file_name)
-        #     print("delete")
-        except:
-            print('failed')
-    return {"status": 200, "t": 1}
+        except Exception as e:
+            print(str(e))
+    return {}
 
 
 def generate_random_string(length):
@@ -310,6 +317,7 @@ def decode_jwt(token, public_key):
 
 
 if __name__ == '__main__':
-    share_sql.refresh_course_df()
+    # share_sql.refresh_course_df()
     # context = ('cert.pem', 'key.pem')  # 证书和密钥文件路径
-    app.run(host='0.0.0.0', port=port, debug=True)
+    ws.run_websocket_server()
+    # app.run(host='0.0.0.0', port=port, debug=True)

@@ -1,7 +1,7 @@
 config_info = {
-    "record": False,
+    "record": True,
     "sleep": 600,
-    "fileLen": 1,
+    "fileLen": 30,
 }
 
 
