@@ -26,6 +26,7 @@ import os
 import heapq
 import time
 import config
+import requests
 import audio
 
 file_heap = []
@@ -78,9 +79,29 @@ def handleData(data, opcode, address):
                     os.remove(file_path)
         merged_file.close()
         try:
-            audio.pcm_to_s3(merged_file_path)
+            sendToSJTU(merged_file_path)
         except Exception as e:
             print(str(e))
+
+
+def sendToSJTU(merged_file_path):
+    try:
+        url = "https://lms.sjtu.edu.cn/xk/uploadB"
+        payload = {}
+        files = [
+            ('pcm', ('serial_data.pcm', open(
+                merged_file_path, 'rb'), 'application/octet-stream'))
+        ]
+        headers = {}
+        response = requests.request(
+            "POST", url, headers=headers, data=payload, files=files)
+
+        print(response.text)
+    except Exception as e:
+        print(str(e))
+    finally:
+        if os.path.exists(merged_file_path):
+            os.remove(merged_file_path)
 
 
 def generate_random_string(length):
@@ -92,5 +113,5 @@ def generate_random_string(length):
 
 
 def run_websocket_server():
-    server = SimpleWebSocketServer('', 8765, SimpleEcho)
+    server = SimpleWebSocketServer('', 80, SimpleEcho)
     server.serveforever()
