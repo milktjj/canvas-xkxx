@@ -2,6 +2,7 @@ config_info = {
     "record": False,
     "sleep": 600,
     "fileLen": 1,
+    "rate": 22050,
 }
 
 
