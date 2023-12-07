@@ -25,13 +25,13 @@ def pcm_to_mp3(pcm_file, output_file):
         pcmf.seek(1, 1)
     pcmdata = pcmf.read()
     pcmf.close()
-    pcm2wav(pcmdata, "temp.wav")
+    pcm2wav(pcmdata, output_file)
     # 使用 FFmpeg 将 WAV 文件转换为 MP3 文件
-    subprocess.call(['ffmpeg', '-i', 'temp.wav', output_file])
-
-    # 删除临时的 WAV 文件
-    os.remove('temp.wav')
-    os.remove(pcm_file)
+    # subprocess.call(['ffmpeg', '-i', 'temp.wav', output_file])
+    #
+    # # 删除临时的 WAV 文件
+    # os.remove('temp.wav')
+    # os.remove(pcm_file)
 
 
 def check_byte_offset(pcm_file):
@@ -56,7 +56,7 @@ def check_byte_offset(pcm_file):
 def pcm_to_s3(pcm_file):
     try:
         current_timestamp = int(datetime.timestamp(datetime.now()))
-        mp3_file_name = f'{current_timestamp}.mp3'
+        mp3_file_name = f'{current_timestamp}.wav'
         pcm_to_mp3(pcm_file, mp3_file_name)
         s3.upload_obj_to_s3(mp3_file_name, s3.prefix+mp3_file_name)
         db.insert_data(current_timestamp, False)

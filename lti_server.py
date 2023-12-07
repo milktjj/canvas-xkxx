@@ -245,7 +245,7 @@ def get_share_link():
     timestamp = request.args.get('t')
     if not timestamp:
         return {}
-    file_name = f'{timestamp}.mp3'
+    file_name = f'{timestamp}.wav'
     url = s3.get_s3_file_url(s3.prefix+file_name)
     return {"url": url}
 
