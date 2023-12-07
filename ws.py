@@ -74,12 +74,11 @@ def handleData(data, opcode, address):
                 file_list.append(filename)
             else:
                 break
-        sorted_files = sorted(file_list)
 
         merged_file_path = "./temp.pcm"
         merged_file = open(merged_file_path, "ab+")
 
-        for file_path in sorted_files:
+        for file_path in file_list:
             with open(file_path, "rb") as file:
                 data = file.read()
                 merged_file.write(data)
