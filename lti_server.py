@@ -320,4 +320,3 @@ if __name__ == '__main__':
     # share_sql.refresh_course_df()
     # context = ('cert.pem', 'key.pem')  # 证书和密钥文件路径
     ws.run_websocket_server()
-    app.run(host='0.0.0.0', port=port, debug=True)
