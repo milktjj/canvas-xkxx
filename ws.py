@@ -28,6 +28,7 @@ import time
 import config
 import requests
 import audio
+import numpy as np
 
 file_heap = []
 executor = ThreadPoolExecutor(max_workers=1000)
@@ -58,7 +59,7 @@ def handleData(data, opcode, address):
     print(ifilename)
     try:
         with open(ifilename, 'wb') as file:
-            file.write(data)
+            file.write(process_data(data))
         heapq.heappush(file_heap, (int(time.time() * 1000), ifilename))
     except Exception as e:
         print(str(e))
@@ -89,6 +90,19 @@ def handleData(data, opcode, address):
             sendToSJTU(merged_file_path)
         except Exception as e:
             print(str(e))
+
+
+def process_data(pcm_str):
+    binary_data = np.frombuffer(bytes.fromhex(pcm_str), dtype=np.int16)
+    average = np.mean(binary_data)
+
+    if np.abs(average) < 1500:
+        binary_data = binary_data[1:]
+    if len(binary_data) % 2 == 1:
+        binary_data = binary_data[:-1]
+    # 将二进制数据转换回字符串
+    modified_data = binary_data.tobytes().hex()
+    return modified_data
 
 
 def sendToSJTU(merged_file_path):
