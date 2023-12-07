@@ -92,17 +92,15 @@ def handleData(data, opcode, address):
             print(str(e))
 
 
-def process_data(pcm_str):
-    binary_data = np.frombuffer(bytes.fromhex(pcm_str), dtype=np.int16)
+def process_data(pcm_data):
+    binary_data = np.frombuffer(pcm_data, dtype=np.int16)
     average = np.mean(binary_data)
 
     if np.abs(average) < 1500:
-        binary_data = binary_data[1:]
-    if len(binary_data) % 2 == 1:
-        binary_data = binary_data[:-1]
-    # 将二进制数据转换回字符串
-    modified_data = binary_data.tobytes().hex()
-    return modified_data
+        pcm_data = pcm_data[1:]
+    if len(pcm_data) % 2 == 1:
+        pcm_data = pcm_data[:-1]
+    return pcm_data 
 
 
 def sendToSJTU(merged_file_path):
