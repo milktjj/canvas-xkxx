@@ -30,7 +30,7 @@ import requests
 import audio
 
 file_heap = []
-executor = ThreadPoolExecutor(max_workers=100)
+executor = ThreadPoolExecutor(max_workers=1000)
 
 
 class SimpleEcho(WebSocket):
@@ -51,11 +51,18 @@ class SimpleEcho(WebSocket):
 
 def handleData(data, opcode, address):
     print("rev", len(data), opcode, address)
+    if opcode == 1:
+        print("rev str")
+        return
     ifilename = './'+generate_random_string(10) + '.pcm'
     print(ifilename)
-    with open(ifilename, 'wb') as file:
-        file.write(data)
-    heapq.heappush(file_heap, (int(time.time() * 1000), ifilename))
+    try:
+        with open(ifilename, 'wb') as file:
+            file.write(data)
+        heapq.heappush(file_heap, (int(time.time() * 1000), ifilename))
+    except Exception as e:
+        print(str(e))
+    print(len(file_heap))
     heap_size_triger = config.get_config_info()['fileLen']
     if len(file_heap) >= heap_size_triger:
         file_list = []
@@ -69,7 +76,7 @@ def handleData(data, opcode, address):
         sorted_files = sorted(file_list)
 
         merged_file_path = "./temp.pcm"
-        merged_file = open(merged_file_path, "wb")
+        merged_file = open(merged_file_path, "ab+")
 
         for file_path in sorted_files:
             with open(file_path, "rb") as file:
@@ -102,6 +109,7 @@ def sendToSJTU(merged_file_path):
     finally:
         if os.path.exists(merged_file_path):
             os.remove(merged_file_path)
+        print("finally")
 
 
 def generate_random_string(length):
