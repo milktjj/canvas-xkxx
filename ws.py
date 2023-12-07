@@ -41,7 +41,11 @@ class SimpleEcho(WebSocket):
             executor.submit(handleData, self.data, self.opcode, self.address)
         except Exception as e:
             print(str(e))
-        self.sendMessage('1')
+        config.ping_time = int(time.time())
+        if config.config_info['record']:
+            self.sendMessage('1')
+        else:
+            self.sendMessage('0')
 
     def handleConnected(self):
         print(self.address, 'connected')

@@ -1,8 +1,10 @@
 config_info = {
     "record": True,
     "sleep": 600,
-    "fileLen": 30, 
+    "fileLen": 15,
 }
+
+ping_time = 0
 
 
 def get_config_info():

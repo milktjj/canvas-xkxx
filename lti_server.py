@@ -177,6 +177,18 @@ def upload():
     return {}
 
 
+@app.route('/ping', methods=['POST'])
+def set_ping():
+    config.ping_time = int(time.time())
+    return {}
+
+
+@app.route('/ping', methods=['GET'])
+def get_ping():
+    if int(time.time()) - config.ping_time < 10:
+        return {"status": True}
+    return {"status": False}
+
 @app.route('/config', methods=['GET'])
 def get_config():
     return config.get_config_info()
