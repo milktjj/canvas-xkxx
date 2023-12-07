@@ -2,8 +2,10 @@ config_info = {
     "record": False,
     "sleep": 600,
     "fileLen": 1,
-    "rate": 22050,
+    "rate": 8000,
 }
+
+ping_time = 0
 
 
 def get_config_info():
