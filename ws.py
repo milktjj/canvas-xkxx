@@ -93,6 +93,9 @@ def handleData(data, opcode, address):
 
 
 def process_data(pcm_data):
+    if len(pcm_data) % 2 == 1:
+        pcm_data = pcm_data[:-1]
+
     binary_data = np.frombuffer(pcm_data, dtype=np.int16)
     average = np.mean(binary_data)
 
@@ -100,7 +103,7 @@ def process_data(pcm_data):
         pcm_data = pcm_data[1:]
     if len(pcm_data) % 2 == 1:
         pcm_data = pcm_data[:-1]
-    return pcm_data 
+    return pcm_data
 
 
 def sendToSJTU(merged_file_path):
