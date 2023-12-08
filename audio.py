@@ -17,12 +17,12 @@ def amr_to_mp3(input_file, output_file):
 
 
 def pcm_to_mp3(pcm_file, output_file):
-    need_seek = False
-    if check_byte_offset(pcm_file):
-        need_seek = True
+    # need_seek = False
+    # if check_byte_offset(pcm_file):
+    #     need_seek = True
     pcmf = open(pcm_file, 'rb')
-    if need_seek:
-        pcmf.seek(1, 1)
+    # if need_seek:
+    #     pcmf.seek(1, 1)
     pcmdata = pcmf.read()
     pcmf.close()
     pcm2wav(pcmdata, output_file)
